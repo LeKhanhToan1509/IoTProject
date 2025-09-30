@@ -10,12 +10,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var ctx = context.Background()
-
 func SetupKeyRedis(cache *cache.KeyCache) {
 
 }
-func InitRedis() *redis.Client {
+func InitRedis(ctx context.Context) *redis.Client {
 	cfg := config.GetConfig()
 	redis_config := cfg.RedisConfig
 	redis_address := fmt.Sprintf("%s:%s", redis_config.Host, redis_config.Port)

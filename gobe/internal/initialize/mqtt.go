@@ -1,13 +1,14 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"iot/pkg/config"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-func InitMqtt() (mqtt.Client, error) {
+func InitMqtt(ctx context.Context) (mqtt.Client, error) {
 	MqttConfig := config.GetConfig().MQTTConfig
 	if MqttConfig == nil {
 		return nil, fmt.Errorf("MQTT configuration is missing")

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"iot/internal/dto"
 	"iot/internal/helper/mailer"
@@ -30,14 +31,16 @@ type UserHandler struct {
 	db     *gorm.DB
 	mailer *mailer.MailService
 	redis  *redis.Client
+	ctx    context.Context
 }
 
-func NewUserHandler(db *gorm.DB, us services.UserServiceInterface, mailer *mailer.MailService, redis *redis.Client) UserHandlerInterface {
+func NewUserHandler(db *gorm.DB, us services.UserServiceInterface, mailer *mailer.MailService, redis *redis.Client, ctx context.Context) UserHandlerInterface {
 	return &UserHandler{
 		us:     us,
 		db:     db,
 		mailer: mailer,
 		redis:  redis,
+		ctx:    ctx,
 	}
 }
 
@@ -47,7 +50,7 @@ func (h *UserHandler) RegisterOTP(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userData, err := h.us.RegisterOTP(h.db, &req, h.mailer, h.redis)
+	userData, err := h.us.RegisterOTP(h.db, &req, h.mailer, h.redis, h.ctx)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

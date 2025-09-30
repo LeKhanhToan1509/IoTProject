@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"iot/internal/model"
 	"iot/pkg/config"
@@ -10,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitMysql() *gorm.DB {
+func InitMysql(ctx context.Context) *gorm.DB {
 	cfg := config.GetConfig()
 	dbConf := cfg.DbConfig
 

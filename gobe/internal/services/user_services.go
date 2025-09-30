@@ -18,7 +18,7 @@ import (
 
 // Định nghĩa interface cho UserService
 type UserServiceInterface interface {
-	RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, mailer_service *mailer.MailService, redis *redis.Client) (*dto.CreateUserResponseWithOTP, error)
+	RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, mailer_service *mailer.MailService, redis *redis.Client, ctx context.Context) (*dto.CreateUserResponseWithOTP, error)
 	Register(db *gorm.DB, userDto *dto.RegisterRequest, mailer_service *mailer.MailService, redis *redis.Client) (*dto.RegisterResponse, error)
 	Login(db *gorm.DB, email, password string) (*dto.LoginResponse, error)
 	GetUserByID(db *gorm.DB, id uint) (*model.User, error)
@@ -26,7 +26,6 @@ type UserServiceInterface interface {
 	UpdateUser(db *gorm.DB, Id uint, data *dto.UpdateUserRequest, redis *redis.Client) error
 	DeleteUser(db *gorm.DB, id uint, redis *redis.Client) error
 }
-
 
 // Struct UserService (có thể mở rộng thêm field nếu cần)
 type UserService struct {
@@ -40,7 +39,7 @@ func NewUserService(ur repository.UserRepositoryInterface) UserServiceInterface 
 	}
 }
 
-func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, mailer_service *mailer.MailService, redis *redis.Client) (*dto.CreateUserResponseWithOTP, error) {
+func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, mailer_service *mailer.MailService, redis *redis.Client, ctx context.Context) (*dto.CreateUserResponseWithOTP, error) {
 	email := userDto.Email
 	exists, err := s.repo.CheckEmailExists(db, email)
 	if err != nil {
@@ -56,12 +55,12 @@ func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, m
 	code := mailer_service.GenerateOTP()
 	time_register := strconv.FormatInt(time.Now().Unix(), 10)
 	redis_key_otp := "otp:" + email + time_register
-	err = redis.Set(context.Background(), redis_key_otp, code, 5*time.Minute).Err()
+	err = redis.Set(ctx, redis_key_otp, code, 5*time.Minute).Err()
 	if err != nil {
 		return nil, err
 	}
 	redis_key_pass := "pass:" + email + time_register
-	err = redis.Set(context.Background(), redis_key_pass, hashedPassword, 10*time.Hour).Err()
+	err = redis.Set(ctx, redis_key_pass, hashedPassword, 10*time.Hour).Err()
 	if err != nil {
 		return nil, err
 	}

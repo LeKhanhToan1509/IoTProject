@@ -26,7 +26,7 @@ services:
       MYSQL_USER: txm           
       MYSQL_PASSWORD: 15092004          
     volumes:
-      - ./mysql_data:/var/lib/mysql    
+      - ./mysql_data:/var/lib/mysql
     restart: unless-stopped
     networks:
       - iot-network
