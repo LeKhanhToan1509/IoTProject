@@ -5,13 +5,12 @@ import (
 	"iot/internal/model"
 	"iot/internal/repository"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-type SensorService interface {
-	CreateSensorData(*gorm.DB, *dto.CreateSensorDTO, *redis.Client, mqtt.Client) error
+type SensorServiceInterface interface {
+	CreateSensorData(*gorm.DB, *dto.CreateSensorDTO, *redis.Client) error
 	GetAllSensorData(*gorm.DB, int, int) ([]model.SensorData, error)
 	DeleteSensorData(*gorm.DB, uint) error
 	GetSensorDataByID(*gorm.DB, uint) (*model.SensorData, error)
@@ -22,11 +21,12 @@ type sensorService struct {
 	repo repository.SensorRepositoryInterface
 }
 
-func NewSensorService() SensorService {
-	return &sensorService{}
+func NewSensorService() SensorServiceInterface {
+	return &sensorService{
+		repo: repository.NewSensorRepository(),
+	}
 }
-
-func (s *sensorService) CreateSensorData(db *gorm.DB, dto *dto.CreateSensorDTO, redis *redis.Client, mqttClient mqtt.Client) error {
+func (s *sensorService) CreateSensorData(db *gorm.DB, dto *dto.CreateSensorDTO, redis *redis.Client) error {
 	sensorData := &model.SensorData{
 		Temperature: dto.Temperature,
 		Humidity:    dto.Humidity,

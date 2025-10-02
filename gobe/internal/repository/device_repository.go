@@ -10,7 +10,7 @@ type DeviceRepositoryInterface interface {
 	CreateDevice(db *gorm.DB, device *model.Device) error
 	GetByID(db *gorm.DB, id uint) (*model.Device, error)
 	GetAllDevices(db *gorm.DB, limit, offset int) ([]model.Device, error)
-	UpdateDevice(db *gorm.DB, id uint) error
+	UpdateDevice(db *gorm.DB, device *model.Device) error
 	DeleteDevice(db *gorm.DB, id uint) error
 }
 
@@ -44,9 +44,8 @@ func (r *DeviceRepository) GetAllDevices(db *gorm.DB, limit, offset int) ([]mode
 }
 
 // UpdateDevice - cập nhật device theo ID
-func (r *DeviceRepository) UpdateDevice(db *gorm.DB, id uint) error {
-	var device model.Device
-	if err := db.First(&device, id).Error; err != nil {
+func (r *DeviceRepository) UpdateDevice(db *gorm.DB, device *model.Device) error {
+	if err := db.First(&device, device.ID).Error; err != nil {
 		return err // không tìm thấy device
 	}
 	return db.Save(&device).Error

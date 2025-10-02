@@ -38,5 +38,5 @@ func (s *MailService) Send(ctx context.Context, sender EmailSender, to string, d
 }
 
 func (s *MailService) GenerateOTP() string {
-	return helper.GenerateOTP()
+	return helper.GenerateSecureOTP()
 }

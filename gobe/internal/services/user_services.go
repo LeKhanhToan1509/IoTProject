@@ -53,6 +53,7 @@ func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, m
 		return nil, err
 	}
 	code := mailer_service.GenerateOTP()
+	fmt.Println("OTP code: ", code)
 	time_register := strconv.FormatInt(time.Now().Unix(), 10)
 	redis_key_otp := "otp:" + email + time_register
 	err = redis.Set(ctx, redis_key_otp, code, 5*time.Minute).Err()
@@ -66,7 +67,7 @@ func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, m
 	}
 	go func() {
 		mailer_service.Send(
-			context.Background(),
+			ctx,
 			&mailer.RegisterEmail{From: "no-reply@myapp.com"},
 			email,
 			map[string]string{"name": userDto.Name, "otp": code},
@@ -82,7 +83,6 @@ func (s *UserService) RegisterOTP(db *gorm.DB, userDto *dto.CreateUserRequest, m
 }
 
 func (s *UserService) Register(db *gorm.DB, userDto *dto.RegisterRequest, mailer_service *mailer.MailService, redis *redis.Client) (*dto.RegisterResponse, error) {
-	fmt.Println("test: ", userDto)
 	email := userDto.Email
 
 	ok, err := s.repo.CheckEmailExists(db, email)

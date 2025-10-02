@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitMysql(ctx context.Context) *gorm.DB {
+func InitMysql(ctx context.Context) (*gorm.DB, error) {
 	cfg := config.GetConfig()
 	dbConf := cfg.DbConfig
 
@@ -36,7 +36,7 @@ func InitMysql(ctx context.Context) *gorm.DB {
 	setPool(db)
 	Migrate(db)
 
-	return db
+	return db, nil
 }
 
 func setPool(db *gorm.DB) {

@@ -13,7 +13,7 @@ import (
 func SetupKeyRedis(cache *cache.KeyCache) {
 
 }
-func InitRedis(ctx context.Context) *redis.Client {
+func InitRedis(ctx context.Context) (*redis.Client, error) {
 	cfg := config.GetConfig()
 	redis_config := cfg.RedisConfig
 	redis_address := fmt.Sprintf("%s:%s", redis_config.Host, redis_config.Port)
@@ -30,5 +30,5 @@ func InitRedis(ctx context.Context) *redis.Client {
 	}
 
 	redis_config.DB = rdb
-	return rdb
+	return rdb, nil
 }

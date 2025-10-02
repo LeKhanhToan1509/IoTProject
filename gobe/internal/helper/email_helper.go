@@ -2,10 +2,12 @@ package helper
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"iot/pkg/config"
+	"math/big"
 	"net"
 	"net/smtp"
 	"strings"
@@ -178,13 +180,14 @@ func SendMail(ctx context.Context, cfg *config.EmailConfig, msg *MailMessage, lo
 	// Timeout sẽ được handle ở level SMTP connection
 	return sendFunc()
 }
-func GenerateOTP() string {
+
+func GenerateSecureOTP() string {
 	const otpLength = 6
 	const digits = "0123456789"
 	otp := make([]byte, otpLength)
 	for i := range otp {
-		otp[i] = digits[time.Now().UnixNano()%int64(len(digits))]
-		time.Sleep(time.Nanosecond) // ensure different seed
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		otp[i] = digits[n.Int64()]
 	}
 	return string(otp)
 }

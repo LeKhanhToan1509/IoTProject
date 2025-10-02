@@ -18,5 +18,6 @@ func (r *DeviceRoute) Setup(api *gin.RouterGroup) {
 		Device.GET("/all", r.DeviceHandler.GetAllDevices)
 		Device.PUT("/:id", r.DeviceHandler.UpdateDevice)
 		Device.DELETE("/:id", r.DeviceHandler.DeleteDevice)
+		Device.POST("/control", r.DeviceHandler.DeviceController)
 	}
 }
