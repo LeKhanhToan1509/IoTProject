@@ -91,8 +91,16 @@ func (b *mqttSocketBridge) handleSensorMessage(ctx context.Context) mqtt.Message
 	return func(client mqtt.Client, msg mqtt.Message) {
 		payload := msg.Payload()
 
+		// Debug log - track MQTT messages and WebSocket clients
+		logger.Log.Info("MQTT message received",
+			zap.String("topic", msg.Topic()),
+			zap.ByteString("payload", payload),
+			zap.Int("websocket_clients", len(b.socketHub.Clients)))
+
 		select {
 		case b.socketHub.Broadcast <- payload:
+			logger.Log.Info("Message broadcasted to WebSocket clients",
+				zap.Int("client_count", len(b.socketHub.Clients)))
 		default:
 			logger.Log.Warn("Broadcast channel full, message dropped")
 		}

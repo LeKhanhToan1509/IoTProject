@@ -5,6 +5,7 @@ import (
 	bridge "iot/brigde"
 	"iot/internal/helper/mailer"
 	"iot/internal/initialize"
+	"iot/internal/repository"
 	"iot/internal/routes"
 	"iot/internal/services"
 	"iot/pkg/config"
@@ -26,6 +27,22 @@ func main() {
 	defer stop()
 
 	r := gin.New()
+	// cors
+	r.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	// Set Gin to release mode
 	gin.SetMode(gin.ReleaseMode)
 
 	db, err := initialize.InitMysql(rootCtx)
@@ -55,7 +72,8 @@ func main() {
 	}
 
 	if mqttClient != nil && socketHub != nil {
-		bridge := bridge.NewMqttSocketBridge(mqttClient, socketHub, redisClient, db, services.NewSensorService())
+		sensorRepo := services.NewSensorService(repository.NewSensorRepository())
+		bridge := bridge.NewMqttSocketBridge(mqttClient, socketHub, redisClient, db, sensorRepo)
 		go bridge.SubscribeSensorData(rootCtx)
 	}
 	routes.InitRouter(r, db, mailerService, redisClient, rootCtx, mqttClient)

@@ -46,7 +46,7 @@ func (r *DeviceRepository) GetAllDevices(db *gorm.DB, limit, offset int) ([]mode
 // UpdateDevice - cập nhật device theo ID
 func (r *DeviceRepository) UpdateDevice(db *gorm.DB, device *model.Device) error {
 	if err := db.First(&device, device.ID).Error; err != nil {
-		return err // không tìm thấy device
+		return err 
 	}
 	return db.Save(&device).Error
 }

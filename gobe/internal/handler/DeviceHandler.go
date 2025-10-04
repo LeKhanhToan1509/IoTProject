@@ -123,10 +123,7 @@ func (h *DeviceHandler) UpdateDevice(c *gin.Context) {
 		return
 	}
 
-	device.Name = req.Name
-	device.Status = req.Status
-
-	if err := h.deviceService.UpdateDevice(h.db, device); err != nil {
+	if err := h.deviceService.UpdateDevice(h.db, uint(id), &req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
