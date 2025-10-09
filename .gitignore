@@ -33,3 +33,4 @@ go.work.sum
 mysql_data
 
 data/mosquitto.db
+node_modules

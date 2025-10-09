@@ -25,6 +25,7 @@ type UserServiceInterface interface {
 	GetAllUsers(db *gorm.DB, limit, offset int, redis *redis.Client) ([]model.User, error)
 	UpdateUser(db *gorm.DB, Id uint, data *dto.UpdateUserRequest, redis *redis.Client) error
 	DeleteUser(db *gorm.DB, id uint, redis *redis.Client) error
+	RefreshToken(db *gorm.DB, refreshToken string) (*dto.LoginResponse, error)
 }
 
 // Struct UserService (có thể mở rộng thêm field nếu cần)
@@ -186,6 +187,35 @@ func (s *UserService) Login(db *gorm.DB, email, password string) (*dto.LoginResp
 	return response, nil
 }
 
+func (s *UserService) RefreshToken(db *gorm.DB, refreshToken string) (*dto.LoginResponse, error) {
+	data, err := jwt_utils.VerifyToken(refreshToken, false)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.repo.GetByID(db, data.Id)
+	if err != nil {
+		return nil, err
+	}
+	tokenPair, err := jwt_utils.GenerateTokenPair(
+		data.Id,
+		data.Username,
+		data.Email,
+	)
+	if err != nil {
+		return nil, err
+	}
+	userResponse := &dto.UserDTO{
+		ID:    data.Id,
+		Name:  data.Username,
+		Email: data.Email,
+	}
+
+	response := &dto.LoginResponse{
+		User:      userResponse,
+		TokenPair: tokenPair,
+	}
+	return response, nil
+}
 func (s *UserService) GetUserByID(db *gorm.DB, id uint) (*model.User, error) {
 	return s.repo.GetByID(db, id)
 }

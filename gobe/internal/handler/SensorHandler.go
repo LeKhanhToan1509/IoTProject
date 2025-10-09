@@ -32,8 +32,8 @@ func NewSensorHandler(s services.SensorServiceInterface, redis *redis.Client, db
 func (h *SensorHandler) GetAllSensorData(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
 	offset := c.DefaultQuery("offset", "0")
-	sort := c.DefaultQuery("sort", "created_at desc")
-
+	order := c.DefaultQuery("order", "desc")
+	sort_by := c.DefaultQuery("sort_by", "created_at")
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil || limitInt <= 0 || limitInt > 100 {
 		limitInt = 10
@@ -42,12 +42,17 @@ func (h *SensorHandler) GetAllSensorData(c *gin.Context) {
 	if err != nil || offsetInt < 0 {
 		offsetInt = 0
 	}
-	data, err := h.s.GetAllSensorData(h.db, limitInt, offsetInt, sort)
+	startDate := c.DefaultQuery("start_date", "")
+	endDate := c.DefaultQuery("end_date", "")
+	search := c.DefaultQuery("search", "")
+
+
+	data, total, err := h.s.GetAllSensorData(h.db, limitInt, offsetInt, sort_by, order, startDate, endDate, search)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve sensor data"})
 		return
 	}
-	c.JSON(200, gin.H{"data": data})
+	c.JSON(200, gin.H{"data": data, "total": total})
 
 }
 

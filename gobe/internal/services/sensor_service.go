@@ -14,7 +14,7 @@ import (
 
 type SensorServiceInterface interface {
 	CreateSensorData(*gorm.DB, *dto.CreateSensorDTO, *redis.Client) error
-	GetAllSensorData(*gorm.DB, int, int, string) ([]model.SensorData, error)
+	GetAllSensorData(*gorm.DB, int, int, string, string, string, string, string) ([]model.SensorData, int, error)
 	DeleteSensorData(*gorm.DB, uint) error
 	GetSensorDataByID(*gorm.DB, uint) (*model.SensorData, error)
 	GetSensorDataByTime(*gorm.DB, string) (*model.SensorData, error)
@@ -39,7 +39,7 @@ func (s *sensorService) CreateSensorData(db *gorm.DB, dto *dto.CreateSensorDTO, 
 	return s.repo.CreateSensorData(db, sensorData)
 }
 
-func (s *sensorService) GetAllSensorData(db *gorm.DB, limit, offset int, sort string) ([]model.SensorData, error) {
+func (s *sensorService) GetAllSensorData(db *gorm.DB, limit, offset int, sort string, order string, startDate string, endDate string, search string) ([]model.SensorData, int, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 10
 	}
@@ -49,7 +49,7 @@ func (s *sensorService) GetAllSensorData(db *gorm.DB, limit, offset int, sort st
 	if sort == "" {
 		sort = "created_at desc"
 	}
-	return s.repo.GetAllSensorData(db, limit, offset, sort)
+	return s.repo.GetAllSensorData(db, limit, offset, sort, order, startDate, endDate, search)
 }
 
 func (s *sensorService) DeleteSensorData(db *gorm.DB, id uint) error {

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	AccessTokenSecret  = []byte(os.Getenv("JWT_ACCESS_SECRET"))
-	RefreshTokenSecret = []byte(os.Getenv("JWT_REFRESH_SECRET"))
+	AccessTokenSecret  []byte
+	RefreshTokenSecret []byte
 )
 
 type Claims struct {
@@ -28,6 +28,9 @@ type TokenPair struct {
 }
 
 func GenerateTokenPair(id uint, username, email string) (*TokenPair, error) {
+	AccessTokenSecret = []byte(os.Getenv("JWT_ACCESS_SECRET"))
+	RefreshTokenSecret = []byte(os.Getenv("JWT_REFRESH_SECRET"))
+
 	// Tạo Access Token
 	accessClaims := &Claims{
 		Id:       id,
@@ -72,9 +75,9 @@ func GenerateTokenPair(id uint, username, email string) (*TokenPair, error) {
 }
 
 func VerifyToken(tokenString string, isAccessToken bool) (*Claims, error) {
-	secret := RefreshTokenSecret
+	secret := []byte(os.Getenv("JWT_REFRESH_SECRET"))
 	if isAccessToken {
-		secret = AccessTokenSecret
+		secret = []byte(os.Getenv("JWT_ACCESS_SECRET"))
 	}
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

@@ -20,10 +20,12 @@ type UserHandlerInterface interface {
 	RegisterOTP(c *gin.Context)
 	Register(c *gin.Context)
 	Login(c *gin.Context)
+	Logout(c *gin.Context)
 	GetUserByID(c *gin.Context)
 	GetAllUsers(c *gin.Context)
 	UpdateUser(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	RefreshToken(c *gin.Context)
 }
 
 type UserHandler struct {
@@ -74,6 +76,21 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "User registered successfully", "data": userData})
 }
 
+func (h *UserHandler) Logout(c *gin.Context) {
+	rfToken, err := c.Cookie("refresh_token")
+	fmt.Println("Refresh token:", rfToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token not found"})
+		return
+	}
+	c.SetCookie("refresh_token", "", -1, "/", "localhost", false, true)
+	c.SetCookie("access_token", "", -1, "/", "localhost", false, true)
+
+	c.JSON(200, gin.H{
+		"message": "User logged out successfully",
+	})
+
+}
 func (h *UserHandler) Login(c *gin.Context) {
 	var req = dto.LoginRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -82,20 +99,42 @@ func (h *UserHandler) Login(c *gin.Context) {
 	}
 	reponse, err := h.us.Login(h.db, req.Email, req.Password)
 
+	c.SetCookie("refresh_token", reponse.TokenPair.RefreshToken, 3600*24*7, "/", "localhost", false, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"message": "User logged in successfully", "data": reponse})
+	c.SetCookie("access_token", reponse.TokenPair.AccessToken, 3600, "/", "localhost", false, true)
+	c.JSON(200, gin.H{
+		"message": "User logged in successfully",
+		"user":    reponse.User,
+	})
 }
 
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token not found"})
+		return
+	}
+	response, err := h.us.RefreshToken(h.db, refreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	c.SetCookie("refresh_token", response.TokenPair.RefreshToken, 3600*24*7, "/", "localhost", false, true)
+	c.SetCookie("access_token", response.TokenPair.AccessToken, 3600, "/", "localhost", false, true)
+	c.JSON(200, gin.H{
+		"message": "Token refreshed successfully",
+	})
+}
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	userId := c.Param("id")
 	if userId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
 		return
 	}
-	// Convert userId to uint
+	
 	var id uint
 	if _, err := fmt.Sscan(userId, &id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})

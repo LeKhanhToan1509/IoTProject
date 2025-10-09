@@ -5,12 +5,12 @@ import (
 	bridge "iot/brigde"
 	"iot/internal/helper/mailer"
 	"iot/internal/initialize"
+	"iot/internal/middlewares"
 	"iot/internal/repository"
 	"iot/internal/routes"
 	"iot/internal/services"
 	"iot/pkg/config"
 	"iot/pkg/logger"
-	mymqtt "iot/pkg/mqtt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,19 +27,7 @@ func main() {
 	defer stop()
 
 	r := gin.New()
-	// cors
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	r.Use(middlewares.CorsMiddleware())
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	// Set Gin to release mode
@@ -58,10 +46,6 @@ func main() {
 	mqttClient, err := initialize.InitMqtt(rootCtx)
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize MQTT", zap.Error(err))
-	} else {
-		defer mymqtt.Disconnect(mqttClient)
-		const mqttTopic = "test"
-		mymqtt.Subscribe(mqttClient, mqttTopic, 1, nil)
 	}
 
 	mailerService := mailer.NewMailService(config.GetConfig().EmailConfig, logger.Log)

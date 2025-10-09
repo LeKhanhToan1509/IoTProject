@@ -25,7 +25,7 @@ func InitRouter(r *gin.Engine, db *gorm.DB, mailer *mailer.MailService, redis *r
 	SetupUserRoute(api, db, mailer, redis, ctx)
 	SetupDeviceRoute(api, db, redis, ctx, mqtt)
 	SetupSensorRoute(api, db, redis)
-
+	SetupDeviceHistoryRoute(api, db)
 	return r
 }
 
@@ -61,4 +61,15 @@ func SetupSensorRoute(api *gin.RouterGroup, db *gorm.DB, redis *redis.Client) {
 
 	// Setup route
 	(&SensorRoute{SensorHandler: sensorHandler}).Setup(api)
+}
+
+func SetupDeviceHistoryRoute(api *gin.RouterGroup, db *gorm.DB) {
+	historyRepo := repository.NewDeviceHistoryRepository()
+	// Khởi tạo service
+	historyService := services.NewDeviceHistoryService(historyRepo) // service thực hiện logic
+	// Khởi tạo handler
+	historyHandler := handler.NewDeviceHistoryHandler(db, historyService)
+
+	// Setup route
+	(&DeviceHistoryRoute{DeviceHistoryHandler: historyHandler}).Setup(api)
 }

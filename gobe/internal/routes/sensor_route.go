@@ -2,6 +2,7 @@ package routes
 
 import (
 	"iot/internal/handler"
+	"iot/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,10 +12,14 @@ type SensorRoute struct {
 }
 
 func (r *SensorRoute) Setup(api *gin.RouterGroup) {
+	auth := middlewares.Authen()
 	sensor := api.Group("/sensor")
 	{
-		sensor.GET("/all", r.SensorHandler.GetAllSensorData)
-		sensor.GET("/:id", r.SensorHandler.GetSensorDataByID)
-		sensor.GET("/last", r.SensorHandler.GetLastSensorData)
+		sensor.Use(auth)
+		{
+			sensor.GET("/all", r.SensorHandler.GetAllSensorData)
+			sensor.GET("/:id", r.SensorHandler.GetSensorDataByID)
+			sensor.GET("/last", r.SensorHandler.GetLastSensorData)
+		}
 	}
 }
